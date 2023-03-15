@@ -42,25 +42,31 @@ def convert_files():
     input_folder_path = input_folder_label.cget("text")[len("Input Folder: "):]
     output_folder_path = output_folder_label.cget("text")[len("Output Folder: "):]
 
-    # Get a list of all .ts files in the input folder
-    input_files = [f for f in os.listdir(input_folder_path) if f.endswith('.ts')]
+    # Get a list of all video files in the input folder and its subdirectories except .raw
+    input_files = []
+    for dirpath, dirnames, filenames in os.walk(input_folder_path):
+        for filename in filenames:
+            if filename.endswith(('.avi', '.mkv', '.flv', '.mov', '.ts')) and not filename.endswith('.raw'):
+                input_files.append(os.path.join(dirpath, filename))
 
     # Loop through each input file and convert it to an mp4 file
     for i, input_file in enumerate(input_files):
-        # Create the output file name by replacing the .ts extension with .mp4
-        output_file = os.path.join(output_folder_path, input_file.replace('.ts', '.mp4'))
+        # Create the output file name by replacing the file extension with .mp4
+        output_file = os.path.join(output_folder_path, os.path.splitext(os.path.basename(input_file))[0] + '.mp4')
 
         # Update the progress bar and label
         progress_bar["value"] = (i + 1) * 100 / len(input_files)
         progress_label.configure(text="Converting file {0} of {1}".format(i + 1, len(input_files)))
         window.update()
 
-       # Run the ffmpeg command to convert the file with hardware acceleration
-        subprocess.call(['ffmpeg', '-hwaccel', 'auto', '-i', os.path.join(input_folder_path, input_file), '-c:v', 'h264_nvenc', '-c:a', 'copy', output_file])
+        # Run the ffmpeg command to convert the file with hardware acceleration
+        subprocess.call(['ffmpeg', '-hwaccel', 'auto', '-i', input_file, '-c:v', 'h264_nvenc', '-c:a', 'copy', output_file])
 
     # Reset the progress bar and label
     progress_bar["value"] = 0
     progress_label.configure(text="Conversion complete!")
+
+
 
 # Create "Select Input Folder" and "Select Output Folder" buttons
 select_input_folder_button = tk.Button(window, text="Select Input Folder", command=select_input_folder)
