@@ -16,6 +16,10 @@ input_folder_label.grid(column=0, row=0)
 progress_label = tk.Label(window, text="")
 progress_label.grid(column=0, row=1)
 
+varDelete = tk.IntVar()
+delete_checkbox = tk.Checkbutton(window, text="Delete Source File?", variable=varDelete, onvalue=1, offvalue=0)
+delete_checkbox.grid(column=0, row=3)
+
 # Create a progress bar
 progress_bar = ttk.Progressbar(window, orient="horizontal", length=300, mode="determinate")
 progress_bar.grid(column=0, row=2, pady=10)
@@ -30,6 +34,7 @@ def select_input_folder():
 def convert_files():
     # Get the input folder path from the label
     input_folder_path = input_folder_label.cget("text")[len("Input Folder: "):]
+
 
     # Get a list of all video files in the input folder and its subdirectories except .raw
     input_files = []
@@ -49,11 +54,15 @@ def convert_files():
         window.update()
 
         # Run the ffmpeg command to convert the file with hardware acceleration
-        subprocess.call(['ffmpeg', '-hwaccel', 'auto', '-i', input_file, '-c:v', 'h264_nvenc', '-c:a', 'copy', output_file])
+        subprocess.call(['ffmpeg', '-y', '-hwaccel', 'auto', '-i', input_file, '-c:v', 'h264_nvenc', '-c:a', 'copy', output_file])
+        if varDelete.get() == 1:
+            os.remove(input_file)
 
     # Reset the progress bar and label
     progress_bar["value"] = 0
     progress_label.configure(text="Conversion complete!")
+
+
 
 # Create a "Select Input Folder" button
 select_input_folder_button = tk.Button(window, text="Select Input Folder", command=select_input_folder)
